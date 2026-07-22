@@ -13,7 +13,7 @@ module.exports = {
   MAILTRAP_TOKEN: process.env.MAILTRAP_TOKEN || '81363c9448f5c7fa6b318c2507bd6937',
   SMTP_HOST: process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
   SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 2525,
-  SMTP_USER: process.env.SMTP_USER || '81363c9448f5c7fa6b318c2507bd6937',
+  SMTP_USER: process.env.SMTP_USER || '5d47469babdeb5',
   SMTP_PASS: process.env.SMTP_PASS || '81363c9448f5c7fa6b318c2507bd6937',
-  EMAIL_FROM: process.env.EMAIL_FROM || 'UnionDesk TRUST <no-reply@demomailtrap.com>'
+  EMAIL_FROM: process.env.EMAIL_FROM || 'arafath engineering workshop <no-reply@demomailtrap.com>'
 };
