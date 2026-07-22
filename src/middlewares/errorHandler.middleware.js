@@ -17,6 +17,14 @@ const errorHandler = (err, req, res, next) => {
     return ApiResponse.error(res, `Duplicate field value entered: ${field}`, 400);
   }
 
+  if (err.name === 'MongooseServerSelectionError' || err.name === 'MongoNetworkError') {
+    return ApiResponse.error(
+      res,
+      'Database Connection Error: Please verify MONGODB_URI in Vercel Environment Variables and ensure MongoDB Atlas IP Access List allows 0.0.0.0/0',
+      500
+    );
+  }
+
   return ApiResponse.error(
     res,
     err.message || 'Internal Server Error',

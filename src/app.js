@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const env = require('./config/env');
 const tenantContextMiddleware = require('./middlewares/tenantContext.middleware');
 const errorHandler = require('./middlewares/errorHandler.middleware');
@@ -63,9 +64,16 @@ app.use(cookieParser());
 // Tenant Context Middleware
 app.use(tenantContextMiddleware);
 
-// API Health Check
+// API Health Check & DB Diagnosis
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'UnionDesk 🇧🇩 SaaS API is running smoothly' });
+  const isConnected = mongoose.connection.readyState === 1;
+  const hasUri = Boolean(process.env.MONGODB_URI);
+  res.status(200).json({
+    status: 'OK',
+    db_status: isConnected ? 'CONNECTED' : 'DISCONNECTED',
+    has_mongodb_uri_env: hasUri,
+    message: isConnected ? 'UnionDesk 🇧🇩 SaaS API is running smoothly' : 'Database Disconnected: Ensure MONGODB_URI is set on Vercel and MongoDB Atlas IP Access List includes 0.0.0.0/0'
+  });
 });
 
 // API Routes
