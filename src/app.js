@@ -23,6 +23,9 @@ const auditRoutes = require('./modules/audit/audit.routes');
 const superAdminRoutes = require('./modules/superadmin/superadmin.routes');
 const feeRoutes = require('./modules/fee/fee.routes');
 const geoRoutes = require('./modules/geo/geo.routes');
+const noticeRoutes = require('./modules/notice/notice.routes');
+const meetingRoutes = require('./modules/meeting/meeting.routes');
+const documentRoutes = require('./modules/document/document.routes');
 
 const app = express();
 
@@ -72,6 +75,9 @@ app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/superadmin', superAdminRoutes);
 app.use('/api/v1/fees', feeRoutes);
 app.use('/api/v1/geo', geoRoutes);
+app.use('/api/v1/notices', noticeRoutes);
+app.use('/api/v1/meetings', meetingRoutes);
+app.use('/api/v1/documents', documentRoutes);
 
 // Error Handling Middleware
 app.use(errorHandler);
