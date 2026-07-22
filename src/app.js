@@ -29,10 +29,19 @@ const documentRoutes = require('./modules/document/document.routes');
 
 const app = express();
 
+// Trust reverse proxies (Vercel CDN / AWS ALB)
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: env.CLIENT_URL,
+  origin: (origin, callback) => {
+    if (!origin || origin.includes('vercel.app') || origin.includes('localhost') || origin === env.CLIENT_URL) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true
 }));
 app.use(mongoSanitize());
@@ -40,7 +49,8 @@ app.use(mongoSanitize());
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
+  validate: { trustProxy: false },
   message: { success: false, message: 'Too many requests from this IP, please try again later.' }
 });
 app.use('/api', limiter);
