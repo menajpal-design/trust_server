@@ -36,13 +36,7 @@ app.set('trust proxy', 1);
 // Security Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin.includes('vercel.app') || origin.includes('localhost') || origin === env.CLIENT_URL) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
-  },
+  origin: true,
   credentials: true
 }));
 app.use(mongoSanitize());
@@ -72,7 +66,7 @@ app.get('/health', (req, res) => {
     status: 'OK',
     db_status: isConnected ? 'CONNECTED' : 'DISCONNECTED',
     has_mongodb_uri_env: hasUri,
-    message: isConnected ? 'UnionDesk 🇧🇩 SaaS API is running smoothly' : 'Database Disconnected: Ensure MONGODB_URI is set on Vercel and MongoDB Atlas IP Access List includes 0.0.0.0/0'
+    message: isConnected ? 'UnionDesk 🇧🇩 SaaS Backend API is running smoothly' : 'Database Disconnected: Ensure MONGODB_URI is set on Vercel and MongoDB Atlas IP Access List includes 0.0.0.0/0'
   });
 });
 
