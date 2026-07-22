@@ -58,6 +58,20 @@ app.use(cookieParser());
 // Tenant Context Middleware
 app.use(tenantContextMiddleware);
 
+// Root Welcome API
+app.get('/', (req, res) => {
+  const isConnected = mongoose.connection.readyState === 1;
+  res.status(200).json({
+    success: true,
+    name: 'UnionDesk 🇧🇩 SaaS Backend API',
+    status: 'ONLINE',
+    db_status: isConnected ? 'CONNECTED' : 'DISCONNECTED',
+    health: '/health',
+    version: '1.0.0',
+    message: 'Welcome to UnionDesk TRUST Backend API Server'
+  });
+});
+
 // API Health Check & DB Diagnosis
 app.get('/health', (req, res) => {
   const isConnected = mongoose.connection.readyState === 1;
