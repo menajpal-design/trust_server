@@ -3,9 +3,11 @@ const ExcelJS = require('exceljs');
 const OrganizationMember = require('../auth/organizationMember.model');
 const User = require('../auth/user.model');
 const Role = require('../auth/role.model');
+const Organization = require('../auth/organization.model');
 const MemberRoleHistory = require('./memberRoleHistory.model');
 const AuditService = require('../audit/audit.service');
 const { hashPassword } = require('../../utils/password');
+const { sendWelcomeCredentialsEmail } = require('../../utils/mailer');
 
 class MemberService {
   static async generateQRCode(organizationId, memberCode) {
@@ -76,8 +78,9 @@ class MemberService {
 
   static async addMember(organizationId, modifierUserId, data) {
     let user = await User.findOne({ email: data.email.toLowerCase() });
+    const rawTempPassword = data.password || 'Member@123456';
     if (!user) {
-      const defaultPasswordHash = await hashPassword('Member@123456');
+      const defaultPasswordHash = await hashPassword(rawTempPassword);
       user = await User.create({
         email: data.email.toLowerCase(),
         first_name: data.first_name,
@@ -158,6 +161,19 @@ class MemberService {
         entity_id: newMember._id.toString(),
         details: `Created member ${memberCode} with role ${roleDoc ? roleDoc.name : 'MEMBER'} and position ${newMember.position_title}`
       });
+    }
+
+    // Send Welcome Credentials Email to Member
+    try {
+      const orgDoc = await Organization.findById(organizationId);
+      await sendWelcomeCredentialsEmail({
+        email: user.email,
+        firstName: user.first_name,
+        tempPassword: rawTempPassword,
+        orgName: orgDoc ? orgDoc.name : 'UnionDesk TRUST'
+      });
+    } catch (mailError) {
+      console.warn('Failed to send member credentials email:', mailError.message);
     }
 
     return await OrganizationMember.findById(newMember._id)
