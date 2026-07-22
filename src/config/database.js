@@ -1,15 +1,22 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
 const env = require('./env');
 const logger = require('../utils/logger');
 
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (e) {
-  // Ignore if custom DNS fails
+// Only set custom DNS in local development, NOT in Vercel serverless runtime
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    const dns = require('dns');
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (e) {
+    // Ignore
+  }
 }
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
+
   try {
     const conn = await mongoose.connect(env.MONGODB_URI, {
       autoIndex: true,
