@@ -15,5 +15,5 @@ module.exports = {
   SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 2525,
   SMTP_USER: process.env.SMTP_USER || '5d47469babdeb5',
   SMTP_PASS: process.env.SMTP_PASS || '81363c9448f5c7fa6b318c2507bd6937',
-  EMAIL_FROM: process.env.EMAIL_FROM || 'arafath engineering workshop <no-reply@demomailtrap.com>'
+  EMAIL_FROM: process.env.EMAIL_FROM || 'arafath engineering workshop <hello@demomailtrap.co>'
 };

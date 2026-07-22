@@ -25,7 +25,7 @@ const sendMailHelper = async ({ to, subject, html, text }) => {
   if (mailtrapClient) {
     try {
       await mailtrapClient.send({
-        from: { name: 'UnionDesk TRUST', email: 'no-reply@demomailtrap.com' },
+        from: { name: 'arafath engineering workshop', email: 'hello@demomailtrap.co' },
         to: [{ email: to }],
         subject,
         html,
