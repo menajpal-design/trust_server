@@ -12,23 +12,36 @@ if (env.MAILTRAP_TOKEN) {
   }
 }
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
-  port: env.SMTP_PORT || 2525,
-  auth: env.SMTP_USER && env.SMTP_PASS ? {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS
-  } : undefined
-});
+const isGmail = env.SMTP_HOST && env.SMTP_HOST.includes('gmail');
+
+const transporter = nodemailer.createTransport(
+  isGmail
+    ? {
+        service: 'gmail',
+        auth: env.SMTP_USER && env.SMTP_PASS ? {
+          user: env.SMTP_USER,
+          pass: env.SMTP_PASS
+        } : undefined
+      }
+    : {
+        host: env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(env.SMTP_PORT, 10) || 587,
+        secure: parseInt(env.SMTP_PORT, 10) === 465,
+        auth: env.SMTP_USER && env.SMTP_PASS ? {
+          user: env.SMTP_USER,
+          pass: env.SMTP_PASS
+        } : undefined
+      }
+);
 
 const sendMailHelper = async ({ to, subject, html, text }) => {
   let sent = false;
 
-  // 1. Try Mailtrap API Client
+  // 1. Try Mailtrap API Client (if token present)
   if (mailtrapClient) {
     try {
       await mailtrapClient.send({
-        from: { name: 'arafath engineering workshop', email: 'hello@demomailtrap.co' },
+        from: { name: 'UnionDesk TRUST', email: 'hello@demomailtrap.co' },
         to: [{ email: to }],
         subject,
         html,
@@ -45,23 +58,26 @@ const sendMailHelper = async ({ to, subject, html, text }) => {
   // 2. Try Nodemailer SMTP
   if (!sent && env.SMTP_USER && env.SMTP_PASS) {
     try {
-      await transporter.sendMail({
-        from: env.EMAIL_FROM,
+      const info = await transporter.sendMail({
+        from: env.EMAIL_FROM || '"UnionDesk TRUST" <mdhridoy4001@gmail.com>',
         to,
         subject,
         html
       });
-      logger.info(`✅ Email sent via Nodemailer SMTP to ${to}`);
+      logger.info(`✅ Email sent successfully via Nodemailer to ${to} (MessageID: ${info.messageId})`);
       sent = true;
       return;
     } catch (smtpError) {
-      logger.warn(`SMTP Notice: ${smtpError.message}`);
+      logger.error(`❌ Nodemailer SMTP Error sending to ${to}: ${smtpError.message}`);
     }
+  } else if (!sent) {
+    logger.warn(`⚠️ SMTP Credentials missing in Vercel Environment Variables. Cannot send live email to ${to}`);
   }
 
-  // 3. Development Fallback Logger (Ensures registration & password reset ALWAYS work in Dev)
+  // 3. Development Fallback Logger
   logger.info(`ℹ️ [DEV EMAIL LOG] Target: ${to} | Subject: ${subject}`);
 };
+
 
 const sendVerificationEmail = async (email, token, firstName) => {
   const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${token}`;
