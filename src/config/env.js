@@ -9,11 +9,12 @@ module.exports = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_token_32chars',
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+  CLIENT_URL: process.env.CLIENT_URL || 'https://trust-swart-six.vercel.app',
   MAILTRAP_TOKEN: process.env.MAILTRAP_TOKEN || '',
-  SMTP_HOST: process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
-  SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 2525,
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 587,
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASS: process.env.SMTP_PASS || '',
-  EMAIL_FROM: process.env.EMAIL_FROM || 'UnionDesk TRUST <no-reply@saasorg.com>'
+  EMAIL_FROM: process.env.EMAIL_FROM || 'UnionDesk TRUST <mdhridoy4001@gmail.com>'
 };
+
