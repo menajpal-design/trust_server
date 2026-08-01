@@ -11,13 +11,19 @@ const { sendWelcomeCredentialsEmail } = require('../../utils/mailer');
 
 class MemberService {
   static async generateQRCode(organizationId, memberCode) {
-    const payload = JSON.stringify({
-      org_id: organizationId,
-      code: memberCode,
-      ts: Date.now()
-    });
-    return await QRCode.toDataURL(payload, { errorCorrectionLevel: 'H' });
+    try {
+      const payload = JSON.stringify({
+        org_id: organizationId,
+        code: memberCode,
+        ts: Date.now()
+      });
+      return await QRCode.toDataURL(payload, { errorCorrectionLevel: 'H' });
+    } catch (qrErr) {
+      console.warn('QR Code generation notice:', qrErr.message);
+      return '';
+    }
   }
+
 
   static async getMembers(organizationId, { search, status, role_id, page = 1, limit = 20 }) {
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
@@ -150,28 +156,37 @@ class MemberService {
     });
 
     if (modifierUserId) {
-      await MemberRoleHistory.create({
-        organization_id: organizationId,
-        member_id: newMember._id,
-        user_id: user._id,
-        old_role_name: 'None',
-        new_role_name: roleDoc ? roleDoc.name : 'MEMBER',
-        old_position: 'None',
-        new_position: newMember.position_title,
-        committee_name: newMember.committee_level,
-        reason: 'Initial Member Creation & Role Assignment',
-        changed_by: modifierUserId
-      });
+      try {
+        await MemberRoleHistory.create({
+          organization_id: organizationId,
+          member_id: newMember._id,
+          user_id: user._id,
+          old_role_name: 'None',
+          new_role_name: roleDoc ? roleDoc.name : 'MEMBER',
+          old_position: 'None',
+          new_position: newMember.position_title,
+          committee_name: newMember.committee_level,
+          reason: 'Initial Member Creation & Role Assignment',
+          changed_by: modifierUserId
+        });
+      } catch (hErr) {
+        console.warn('Role history log notice:', hErr.message);
+      }
 
-      await AuditService.logAction({
-        organization_id: organizationId,
-        user_id: modifierUserId,
-        action: 'MEMBER_CREATED',
-        entity_type: 'OrganizationMember',
-        entity_id: newMember._id.toString(),
-        details: `Created member ${memberCode} with role ${roleDoc ? roleDoc.name : 'MEMBER'} and position ${newMember.position_title}`
-      });
+      try {
+        await AuditService.logAction({
+          organization_id: organizationId,
+          user_id: modifierUserId,
+          action: 'MEMBER_CREATED',
+          entity_type: 'OrganizationMember',
+          entity_id: newMember._id.toString(),
+          details: `Created member ${memberCode} with role ${roleDoc ? roleDoc.name : 'MEMBER'} and position ${newMember.position_title}`
+        });
+      } catch (aErr) {
+        console.warn('Audit log notice:', aErr.message);
+      }
     }
+
 
     // Send Welcome Credentials Email to Member
     try {

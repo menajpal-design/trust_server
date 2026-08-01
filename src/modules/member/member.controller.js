@@ -19,6 +19,9 @@ class MemberController {
   }
 
   static async create(req, res) {
+    if (!req.user || !req.user.active_organization_id) {
+      return ApiResponse.error(res, 'Active organization context required. Please select or switch to an active organization.', 400);
+    }
     const result = await MemberService.addMember(
       req.user.active_organization_id,
       req.user._id,
@@ -26,6 +29,7 @@ class MemberController {
     );
     return ApiResponse.success(res, 'Member added successfully', result, 201);
   }
+
 
   static async update(req, res) {
     const result = await MemberService.updateMember(
