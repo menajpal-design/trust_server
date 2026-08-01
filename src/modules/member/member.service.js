@@ -115,8 +115,18 @@ class MemberService {
     }
     if (!roleId) {
       roleDoc = await Role.findOne({ organization_id: organizationId, name: 'MEMBER' });
-      roleId = roleDoc ? roleDoc._id : null;
+      if (!roleDoc) {
+        roleDoc = await Role.create({
+          organization_id: organizationId,
+          name: 'MEMBER',
+          permissions: ['members:read', 'events:read', 'notices:read'],
+          is_system: true,
+          description: 'Default Member Role'
+        });
+      }
+      roleId = roleDoc._id;
     }
+
 
     const count = await OrganizationMember.countDocuments({ organization_id: organizationId });
     const memberCode = data.member_code || `MEM-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
