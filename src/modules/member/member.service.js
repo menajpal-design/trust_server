@@ -182,15 +182,8 @@ class MemberService {
     const memberCode = data.member_code || `MEM-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
     const qrCodeData = await this.generateQRCode(organizationId, memberCode);
 
-    const validTypes = ['GENERAL', 'LIFE_MEMBER', 'HONORARY', 'STUDENT', 'DONOR'];
-    const validLevels = ['NONE', 'CENTRAL', 'DISTRICT', 'UPAZILA'];
-    const validStatuses = ['PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED'];
-
-    const membershipType = validTypes.includes(data.membership_type) ? data.membership_type : 'GENERAL';
-    const committeeLevel = validLevels.includes(data.committee_level) ? data.committee_level : 'NONE';
-    const status = validStatuses.includes(data.status) ? data.status : 'ACTIVE';
-
     const newMember = await OrganizationMember.create({
+
       organization_id: organizationId,
       user_id: user._id,
       member_code: memberCode,
