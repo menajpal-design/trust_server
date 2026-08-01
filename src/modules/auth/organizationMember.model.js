@@ -109,7 +109,11 @@ const organizationMemberSchema = new mongoose.Schema(
   }
 );
 
-organizationMemberSchema.index({ organization_id: 1, user_id: 1 }, { unique: true });
+organizationMemberSchema.index(
+  { organization_id: 1, user_id: 1 },
+  { unique: true, partialFilterExpression: { is_deleted: false } }
+);
 organizationMemberSchema.index({ organization_id: 1, is_deleted: 1, status: 1 });
+
 
 module.exports = mongoose.model('OrganizationMember', organizationMemberSchema);

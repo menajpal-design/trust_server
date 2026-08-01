@@ -101,15 +101,8 @@ class MemberService {
 
     const existingMember = await OrganizationMember.findOne({
       organization_id: organizationId,
-      user_id: user._id,
-      is_deleted: false
+      user_id: user._id
     });
-
-    if (existingMember) {
-      const error = new Error('User is already a member of this organization');
-      error.statusCode = 400;
-      throw error;
-    }
 
     let roleId = data.role_id;
     let roleDoc = null;
@@ -132,6 +125,57 @@ class MemberService {
       }
       roleId = roleDoc._id;
     }
+
+    const validTypes = ['GENERAL', 'LIFE_MEMBER', 'HONORARY', 'STUDENT', 'DONOR'];
+    const validLevels = ['NONE', 'CENTRAL', 'DISTRICT', 'UPAZILA'];
+    const validStatuses = ['PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED'];
+
+    const membershipType = validTypes.includes(data.membership_type) ? data.membership_type : 'GENERAL';
+    const committeeLevel = validLevels.includes(data.committee_level) ? data.committee_level : 'NONE';
+    const status = validStatuses.includes(data.status) ? data.status : 'ACTIVE';
+
+    if (existingMember) {
+      if (existingMember.is_deleted) {
+        // Restore soft-deleted member record
+        existingMember.is_deleted = false;
+        existingMember.status = status;
+        existingMember.membership_type = membershipType;
+        existingMember.committee_level = committeeLevel;
+        existingMember.position_title = data.position_title || 'Member';
+        existingMember.role_id = roleId;
+        existingMember.fee_profile = data.fee_profile || {};
+        existingMember.phone = data.phone || existingMember.phone;
+        existingMember.address = data.address || existingMember.address;
+        if (data.member_code) existingMember.member_code = data.member_code;
+        await existingMember.save();
+
+        if (modifierUserId) {
+          try {
+            await MemberRoleHistory.create({
+              organization_id: organizationId,
+              member_id: existingMember._id,
+              user_id: user._id,
+              old_role_name: 'Deleted',
+              new_role_name: roleDoc ? roleDoc.name : 'MEMBER',
+              old_position: 'Deleted',
+              new_position: existingMember.position_title,
+              committee_name: existingMember.committee_level,
+              reason: 'Restored Member Record & Reassigned Role',
+              changed_by: modifierUserId
+            });
+          } catch (hErr) {}
+        }
+
+        return await OrganizationMember.findById(existingMember._id)
+          .populate('user_id', 'first_name last_name email avatar_url')
+          .populate('role_id', 'name permissions');
+      }
+
+      const error = new Error('User is already an active member of this organization');
+      error.statusCode = 400;
+      throw error;
+    }
+
 
 
     const count = await OrganizationMember.countDocuments({ organization_id: organizationId });
