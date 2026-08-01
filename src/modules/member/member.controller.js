@@ -52,10 +52,12 @@ class MemberController {
   static async delete(req, res) {
     const result = await MemberService.deleteMember(
       req.user.active_organization_id,
-      req.params.id
+      req.params.id,
+      req.user._id
     );
     return ApiResponse.success(res, result.message, null, 200);
   }
+
 
   static async importExcel(req, res) {
     if (!req.file) {

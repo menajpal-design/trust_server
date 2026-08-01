@@ -362,12 +362,12 @@ class MemberService {
       .sort({ created_at: -1 });
   }
 
-  static async deleteMember(organizationId, memberId) {
+  static async deleteMember(organizationId, memberId, currentUserId) {
     const member = await OrganizationMember.findOne({
       _id: memberId,
       organization_id: organizationId,
       is_deleted: false
-    });
+    }).populate('role_id');
 
     if (!member) {
       const error = new Error('Member record not found');
@@ -375,10 +375,23 @@ class MemberService {
       throw error;
     }
 
+    if (currentUserId && member.user_id && member.user_id.toString() === currentUserId.toString()) {
+      const error = new Error('Action Denied: You cannot delete your own account while logged in');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (member.is_default_tenant || (member.role_id && member.role_id.name === 'ORG_OWNER')) {
+      const error = new Error('Action Denied: The Organization Owner account cannot be deleted');
+      error.statusCode = 400;
+      throw error;
+    }
+
     member.is_deleted = true;
     await member.save();
     return { message: 'Member deleted successfully' };
   }
+
 
   static async importExcel(organizationId, fileBuffer) {
     const workbook = new ExcelJS.Workbook();
