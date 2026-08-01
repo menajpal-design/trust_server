@@ -82,12 +82,11 @@ const sendMailHelper = async ({ to, subject, html, text }) => {
 const getClientUrl = () => {
   const url = process.env.CLIENT_URL || env.CLIENT_URL;
   if (!url || url.includes('localhost') || url.includes('127.0.0.1')) {
-    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-      return 'https://trust-swart-six.vercel.app';
-    }
+    return 'https://trust-swart-six.vercel.app';
   }
-  return url || 'https://trust-swart-six.vercel.app';
+  return url;
 };
+
 
 const sendVerificationEmail = async (email, token, firstName) => {
   const clientUrl = getClientUrl();

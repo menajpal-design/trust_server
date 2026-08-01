@@ -13,8 +13,9 @@ module.exports = {
   MAILTRAP_TOKEN: process.env.MAILTRAP_TOKEN || '',
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
   SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 587,
-  SMTP_USER: process.env.SMTP_USER || '',
-  SMTP_PASS: process.env.SMTP_PASS || '',
-  EMAIL_FROM: process.env.EMAIL_FROM || 'UnionDesk TRUST <mdhridoy4001@gmail.com>'
+  SMTP_USER: process.env.SMTP_USER || 'mdhridoy4001@gmail.com',
+  SMTP_PASS: process.env.SMTP_PASS || 'upyeslmduiepqvwd',
+  EMAIL_FROM: process.env.EMAIL_FROM || '"UnionDesk TRUST" <mdhridoy4001@gmail.com>'
 };
+
 

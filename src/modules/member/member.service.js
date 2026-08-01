@@ -166,9 +166,22 @@ class MemberService {
           } catch (hErr) {}
         }
 
+        try {
+          const orgDoc = await Organization.findById(organizationId);
+          await sendWelcomeCredentialsEmail({
+            email: user.email,
+            firstName: user.first_name,
+            tempPassword: rawTempPassword,
+            orgName: orgDoc ? orgDoc.name : 'UnionDesk TRUST'
+          });
+        } catch (mailError) {
+          console.warn('Failed to send member credentials email on restore:', mailError.message);
+        }
+
         return await OrganizationMember.findById(existingMember._id)
           .populate('user_id', 'first_name last_name email avatar_url')
           .populate('role_id', 'name permissions');
+
       }
 
       const error = new Error('User is already an active member of this organization');
