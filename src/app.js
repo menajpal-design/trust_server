@@ -36,10 +36,17 @@ app.set('trust proxy', 1);
 // Security Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: function (origin, callback) {
+    callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'Accept', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
+app.options('*', cors());
 app.use(mongoSanitize());
+
 
 // Rate Limiting
 const limiter = rateLimit({

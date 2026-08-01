@@ -18,14 +18,26 @@ const authenticate = async (req, res, next) => {
       return ApiResponse.error(res, 'User account is inactive or deleted', 401);
     }
 
-    const activeTenantId = req.headers['x-tenant-id'] || decoded.org_id;
+    let activeTenantId = req.headers['x-tenant-id'] || decoded.org_id;
     let permissions = [];
     let roleName = null;
+
+    if (!activeTenantId) {
+      const defaultMember = await OrganizationMember.findOne({
+        user_id: user._id,
+        is_deleted: false,
+        status: 'ACTIVE'
+      });
+      if (defaultMember) {
+        activeTenantId = defaultMember.organization_id.toString();
+      }
+    }
 
     if (activeTenantId) {
       const member = await OrganizationMember.findOne({
         organization_id: activeTenantId,
         user_id: user._id,
+        is_deleted: false,
         status: 'ACTIVE'
       }).populate('role_id');
 
@@ -34,6 +46,7 @@ const authenticate = async (req, res, next) => {
         roleName = member.role_id.name;
       }
     }
+
 
     req.user = {
       _id: user._id.toString(),
