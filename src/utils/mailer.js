@@ -79,8 +79,19 @@ const sendMailHelper = async ({ to, subject, html, text }) => {
 };
 
 
+const getClientUrl = () => {
+  const url = process.env.CLIENT_URL || env.CLIENT_URL;
+  if (!url || url.includes('localhost') || url.includes('127.0.0.1')) {
+    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+      return 'https://trust-swart-six.vercel.app';
+    }
+  }
+  return url || 'https://trust-swart-six.vercel.app';
+};
+
 const sendVerificationEmail = async (email, token, firstName) => {
-  const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${token}`;
+  const clientUrl = getClientUrl();
+  const verifyUrl = `${clientUrl}/verify-email?token=${token}`;
   const html = `
     <h2>Hello ${firstName},</h2>
     <p>Thank you for registering with UnionDesk TRUST SaaS Platform.</p>
@@ -98,7 +109,8 @@ const sendVerificationEmail = async (email, token, firstName) => {
 };
 
 const sendPasswordResetEmail = async (email, token, firstName) => {
-  const resetUrl = `${env.CLIENT_URL}/reset-password?token=${token}`;
+  const clientUrl = getClientUrl();
+  const resetUrl = `${clientUrl}/reset-password?token=${token}`;
   const html = `
     <h2>Hello ${firstName},</h2>
     <p>You requested a password reset for your account.</p>
@@ -116,7 +128,9 @@ const sendPasswordResetEmail = async (email, token, firstName) => {
 };
 
 const sendWelcomeCredentialsEmail = async ({ email, firstName, tempPassword, orgName }) => {
-  const loginUrl = `${env.CLIENT_URL}/login`;
+  const clientUrl = getClientUrl();
+  const loginUrl = `${clientUrl}/login`;
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
       <h2 style="color: #4F46E5;">Welcome to ${orgName}!</h2>
