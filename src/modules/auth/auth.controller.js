@@ -15,10 +15,11 @@ class AuthController {
   static async login(req, res) {
     const result = await AuthService.login(req.body);
 
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 Days
     });
 
@@ -33,15 +34,33 @@ class AuthController {
     }
 
     const result = await AuthService.refreshToken(refreshToken);
+
+    if (result.refreshToken) {
+      const isProd = process.env.NODE_ENV === 'production';
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+      delete result.refreshToken;
+    }
+
     return ApiResponse.success(res, 'Access token refreshed', result, 200);
   }
 
   static async logout(req, res) {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     await AuthService.logout(refreshToken);
-    res.clearCookie('refreshToken');
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax'
+    });
     return ApiResponse.success(res, 'Logged out successfully', null, 200);
   }
+
 
   static async verifyEmail(req, res) {
     const result = await AuthService.verifyEmail(req.body.token);
