@@ -33,19 +33,24 @@ const app = express();
 // Trust reverse proxies (Vercel CDN / AWS ALB)
 app.set('trust proxy', 1);
 
+// Universal CORS & Preflight Middleware for Vercel Serverless
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-ID, Accept, X-Requested-With');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 // Security Middlewares
-app.use(helmet());
-app.use(cors({
-  origin: function (origin, callback) {
-    callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'Accept', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-}));
-app.options('*', cors());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(mongoSanitize());
+
 
 
 // Rate Limiting
