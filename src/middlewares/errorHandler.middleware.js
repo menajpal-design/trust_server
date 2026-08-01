@@ -2,7 +2,14 @@ const logger = require('../utils/logger');
 const ApiResponse = require('../utils/apiResponse');
 
 const errorHandler = (err, req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-ID, Accept, X-Requested-With');
+
   logger.error(`Error: ${err.message}`, { stack: err.stack });
+
 
   if (err.name === 'ValidationError') {
     const errors = Object.values(err.errors).map(el => ({

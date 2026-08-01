@@ -267,7 +267,10 @@ class AuthService {
   }
 
   static async forgotPassword(email) {
-    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!email || typeof email !== 'string') {
+      return { message: 'If an account exists with that email, a password reset link has been sent.' };
+    }
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user || user.is_deleted) {
       // Do not reveal user existence for security
       return { message: 'If an account exists with that email, a password reset link has been sent.' };
@@ -319,16 +322,25 @@ class AuthService {
 
   static async getMe(userId, activeOrgId) {
     const user = await User.findById(userId);
-    const members = await OrganizationMember.find({ user_id: userId, status: 'ACTIVE' })
+    if (!user || user.is_deleted) {
+      const error = new Error('User account is invalid or deleted');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const members = await OrganizationMember.find({ user_id: userId, is_deleted: false, status: 'ACTIVE' })
       .populate('organization_id')
       .populate('role_id');
+
+    // Filter members with valid organization references
+    const validMembers = members.filter(m => m.organization_id && m.organization_id._id);
 
     let activeOrg = null;
     let permissions = [];
     let roleName = 'MEMBER';
 
     if (activeOrgId) {
-      const currentMember = members.find(m => m.organization_id._id.toString() === activeOrgId);
+      const currentMember = validMembers.find(m => m.organization_id._id.toString() === activeOrgId);
       if (currentMember) {
         activeOrg = currentMember.organization_id;
         roleName = currentMember.role_id ? currentMember.role_id.name : 'MEMBER';
@@ -336,10 +348,10 @@ class AuthService {
       }
     }
 
-    if (!activeOrg && members.length > 0) {
-      activeOrg = members[0].organization_id;
-      roleName = members[0].role_id ? members[0].role_id.name : 'MEMBER';
-      permissions = members[0].role_id ? members[0].role_id.permissions : [];
+    if (!activeOrg && validMembers.length > 0) {
+      activeOrg = validMembers[0].organization_id;
+      roleName = validMembers[0].role_id ? validMembers[0].role_id.name : 'MEMBER';
+      permissions = validMembers[0].role_id ? validMembers[0].role_id.permissions : [];
     }
 
     return {
@@ -347,7 +359,7 @@ class AuthService {
         _id: user._id,
         email: user.email,
         first_name: user.first_name,
-        last_name: user.last_name,
+        last_name: user.last_name || '',
         is_email_verified: user.is_email_verified,
         is_global_superadmin: user.is_global_superadmin
       },
@@ -358,7 +370,7 @@ class AuthService {
         role: roleName,
         permissions
       } : null,
-      organizations: members.map(m => ({
+      organizations: validMembers.map(m => ({
         _id: m.organization_id._id,
         name: m.organization_id.name,
         slug: m.organization_id.slug,
@@ -366,6 +378,7 @@ class AuthService {
       }))
     };
   }
+
 
   static async switchTenant(userId, targetOrgId) {
     const member = await OrganizationMember.findOne({
