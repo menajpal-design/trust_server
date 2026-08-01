@@ -57,6 +57,8 @@ module.exports = {
   createCommitteeSchema,
   updateCommitteeSchema,
   assignMemberSchema,
+  addCommitteeMemberSchema: assignMemberSchema,
   updateMemberSchema,
   archiveTermSchema
 };
+

@@ -1,9 +1,9 @@
 const { z } = require('zod');
 
-const addMemberSchema = z.object({
+const createMemberSchema = z.object({
   body: z.object({
     first_name: z.string().min(2, 'First name must be at least 2 characters'),
-    last_name: z.string().min(2, 'Last name must be at least 2 characters'),
+    last_name: z.string().optional().nullable(),
     email: z.string().email('Invalid email address'),
     member_code: z.string().optional(),
     role_id: z.string().optional(),
@@ -12,13 +12,13 @@ const addMemberSchema = z.object({
     emergency_contact: z.string().optional(),
     address: z.string().optional(),
     status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED']).optional()
-  })
+  }).passthrough()
 });
 
 const updateMemberSchema = z.object({
   body: z.object({
     first_name: z.string().min(2).optional(),
-    last_name: z.string().min(2).optional(),
+    last_name: z.string().optional(),
     email: z.string().email().optional(),
     member_code: z.string().optional(),
     role_id: z.string().optional(),
@@ -27,10 +27,12 @@ const updateMemberSchema = z.object({
     emergency_contact: z.string().optional(),
     address: z.string().optional(),
     status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED']).optional()
-  })
+  }).passthrough()
 });
 
 module.exports = {
-  addMemberSchema,
+  createMemberSchema,
+  addMemberSchema: createMemberSchema,
   updateMemberSchema
 };
+

@@ -51,5 +51,8 @@ const updateOrganizationSchema = z.object({
 
 module.exports = {
   createOrganizationSchema,
-  updateOrganizationSchema
+  updateOrganizationSchema,
+  createOrgSchema: createOrganizationSchema,
+  updateOrgSchema: updateOrganizationSchema
 };
+
