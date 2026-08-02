@@ -107,12 +107,13 @@ class FeeService {
       throw error;
     }
 
-    const payAmount = parseFloat(payment_amount);
+    const payAmount = parseFloat(data.payment_amount !== undefined ? data.payment_amount : data.amount);
     if (isNaN(payAmount) || payAmount <= 0) {
       const error = new Error('Invalid payment amount');
       error.statusCode = 400;
       throw error;
     }
+
 
     due.paid_amount += payAmount;
     due.payment_method = payment_method || 'CASH';

@@ -1,20 +1,32 @@
 const asyncHandler = require('../../utils/asyncHandler');
-const apiResponse = require('../../utils/apiResponse');
+const ApiResponse = require('../../utils/apiResponse');
 const DocumentService = require('./document.service');
 
 const getDocuments = asyncHandler(async (req, res) => {
-  const docs = await DocumentService.getDocuments(req.organization._id, req.query);
-  return apiResponse.success(res, docs, 'Documents retrieved successfully');
+  const orgId = req.user?.active_organization_id || req.headers['x-tenant-id'];
+  if (!orgId) {
+    return ApiResponse.error(res, 'Active organization context required.', 400);
+  }
+  const docs = await DocumentService.getDocuments(orgId, req.query);
+  return ApiResponse.success(res, 'Documents retrieved successfully', docs, 200);
 });
 
 const uploadDocument = asyncHandler(async (req, res) => {
-  const doc = await DocumentService.uploadDocument(req.organization._id, req.user._id, req.body);
-  return apiResponse.created(res, doc, 'Document uploaded successfully');
+  const orgId = req.user?.active_organization_id || req.headers['x-tenant-id'];
+  if (!orgId) {
+    return ApiResponse.error(res, 'Active organization context required.', 400);
+  }
+  const doc = await DocumentService.uploadDocument(orgId, req.user._id, req.body);
+  return ApiResponse.success(res, 'Document uploaded successfully', doc, 201);
 });
 
 const deleteDocument = asyncHandler(async (req, res) => {
-  await DocumentService.deleteDocument(req.organization._id, req.params.id);
-  return apiResponse.success(res, null, 'Document deleted successfully');
+  const orgId = req.user?.active_organization_id || req.headers['x-tenant-id'];
+  if (!orgId) {
+    return ApiResponse.error(res, 'Active organization context required.', 400);
+  }
+  await DocumentService.deleteDocument(orgId, req.params.id);
+  return ApiResponse.success(res, 'Document deleted successfully', null, 200);
 });
 
 module.exports = {
@@ -22,3 +34,4 @@ module.exports = {
   uploadDocument,
   deleteDocument
 };
+
