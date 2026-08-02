@@ -93,10 +93,19 @@ class FeeService {
   }
 
   static async collectFee(organizationId, collectorUserId, data) {
-    const { due_id, payment_amount, payment_method, backdated_date, remarks } = data;
+    // Accept both field naming conventions from frontend
+    const dueId = data.due_id || data.id;
+    const paymentMethod = data.payment_method || 'CASH';
+    const backdatedDate = data.backdated_date;
+
+    if (!dueId) {
+      const error = new Error('Due ID is required');
+      error.statusCode = 400;
+      throw error;
+    }
 
     const due = await MemberFeeDue.findOne({
-      _id: due_id,
+      _id: dueId,
       organization_id: organizationId,
       is_deleted: false
     }).populate('member_id');
@@ -107,17 +116,19 @@ class FeeService {
       throw error;
     }
 
-    const payAmount = parseFloat(data.payment_amount !== undefined ? data.payment_amount : data.amount);
+    // Accept both amount and payment_amount field names
+    const rawAmount = data.payment_amount !== undefined ? data.payment_amount : data.amount;
+    const payAmount = parseFloat(rawAmount);
     if (isNaN(payAmount) || payAmount <= 0) {
-      const error = new Error('Invalid payment amount');
+      const error = new Error('Invalid payment amount: please enter a valid number greater than zero');
       error.statusCode = 400;
       throw error;
     }
 
 
     due.paid_amount += payAmount;
-    due.payment_method = payment_method || 'CASH';
-    due.payment_date = backdated_date ? new Date(backdated_date) : new Date();
+    due.payment_method = paymentMethod;
+    due.payment_date = backdatedDate ? new Date(backdatedDate) : new Date();
 
     if (due.paid_amount >= due.due_amount + due.late_fee) {
       due.status = 'PAID';
